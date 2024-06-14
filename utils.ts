@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Buffer } from "https://deno.land/std@0.147.0/node/buffer.ts";
+import { Buffer } from "node:buffer";
 import { SmartBuffer } from "./mod.ts";
 
 /* Error strings */

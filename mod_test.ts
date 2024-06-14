@@ -1,13 +1,15 @@
 // deno-lint-ignore-file no-explicit-any no-unused-vars
 import { SmartBuffer, SmartBufferOptions } from "./mod.ts";
 import { BufferEncoding, checkEncoding, isFiniteInteger } from "./utils.ts";
-import { Buffer } from "https://deno.land/std@0.147.0/node/buffer.ts";
+import { Buffer } from "node:buffer";
+import { beforeAll, describe, it } from "jsr:@std/testing/bdd";
 import {
-  beforeAll,
-  describe,
-  it,
-} from "https://deno.land/std@0.147.0/testing/bdd.ts";
-import { assert } from "https://cdn.skypack.dev/chai@4.3.4?dts";
+  assertAlmostEquals,
+  assertEquals,
+  assertNotStrictEquals,
+  assertStrictEquals,
+  assertThrows,
+} from "jsr:@std/assert";
 
 describe("Constructing a SmartBuffer", () => {
   describe("Constructing with an existing Buffer", () => {
@@ -31,11 +33,11 @@ describe("Constructing a SmartBuffer", () => {
     const reader = SmartBuffer.fromBuffer(buff);
 
     it("should have the exact same internal Buffer when constructed with a Buffer", () => {
-      assert.strictEqual(reader.internalBuffer, buff);
+      assertStrictEquals(reader.internalBuffer, buff);
     });
 
     it("should return a buffer with the same content", () => {
-      assert.deepEqual(reader.toBuffer(), buff);
+      assertEquals(reader.toBuffer(), buff);
     });
   });
 
@@ -60,11 +62,11 @@ describe("Constructing a SmartBuffer", () => {
     const reader = SmartBuffer.fromBuffer(buff, "ascii");
 
     it("should have the exact same internal Buffer", () => {
-      assert.strictEqual(reader.internalBuffer, buff);
+      assertStrictEquals(reader.internalBuffer, buff);
     });
 
     it("should have the same encoding that was set", () => {
-      assert.strictEqual(reader.encoding, "ascii");
+      assertStrictEquals(reader.encoding, "ascii");
     });
   });
 
@@ -73,7 +75,7 @@ describe("Constructing a SmartBuffer", () => {
     const reader = SmartBuffer.fromSize(size);
 
     it("should have an internal Buffer with the same length as the size defined in the constructor", () => {
-      assert.strictEqual(reader.internalBuffer.length, size);
+      assertStrictEquals(reader.internalBuffer.length, size);
     });
   });
 
@@ -84,12 +86,12 @@ describe("Constructing a SmartBuffer", () => {
       const reader = SmartBuffer.fromOptions({
         encoding,
       });
-      assert.strictEqual(reader.encoding, encoding);
+      assertStrictEquals(reader.encoding, encoding);
     });
 
     it("should have an internal encoding with the encoding given to the constructor (2nd argument)", () => {
       const reader = SmartBuffer.fromSize(1024, encoding);
-      assert.strictEqual(reader.encoding, encoding);
+      assertStrictEquals(reader.encoding, encoding);
     });
   });
 
@@ -121,35 +123,35 @@ describe("Constructing a SmartBuffer", () => {
 
     it("should create a SmartBuffer with size 1024 and ascii encoding", () => {
       const sbuff = SmartBuffer.fromOptions(validOptions1);
-      assert.strictEqual(sbuff.encoding, validOptions1.encoding);
-      assert.strictEqual(sbuff.internalBuffer.length, validOptions1.size);
+      assertStrictEquals(sbuff.encoding, validOptions1.encoding);
+      assertStrictEquals(sbuff.internalBuffer.length, validOptions1.size);
     });
 
     it("should create a SmartBuffer with the provided buffer as the initial value", () => {
       const sbuff = SmartBuffer.fromOptions(validOptions2);
-      assert.deepEqual(sbuff.internalBuffer, validOptions2.buff);
+      assertEquals(sbuff.internalBuffer, validOptions2.buff);
     });
 
     it("should create a SmartBuffer with the provided ascii encoding, and create a default buffer size", () => {
       const sbuff = SmartBuffer.fromOptions(validOptions3);
-      assert.strictEqual(sbuff.encoding, validOptions3.encoding);
-      assert.strictEqual(sbuff.internalBuffer.length, 4096);
+      assertStrictEquals(sbuff.encoding, validOptions3.encoding);
+      assertStrictEquals(sbuff.internalBuffer.length, 4096);
     });
 
     it("should throw an error when given an options object with an invalid encoding", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const sbuff = SmartBuffer.fromOptions(invalidOptions1);
       });
     });
 
     it("should throw an error when given an options object with an invalid size", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const sbuff = SmartBuffer.fromOptions(invalidOptions2);
       });
     });
 
     it("should throw an error when given an options object with an invalid buffer", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const sbuff = SmartBuffer.fromOptions(invalidOptions3);
       });
     });
@@ -157,14 +159,14 @@ describe("Constructing a SmartBuffer", () => {
 
   describe("Constructing with invalid parameters", () => {
     it("should throw an exception when given an object that is not a valid SmartBufferOptions object", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const invalidOptions: Record<string, unknown> = {};
         const reader = SmartBuffer.fromOptions(invalidOptions);
       });
     });
 
     it("should throw an exception when given an invalid number size", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const reader = SmartBuffer.fromOptions({
           size: -100,
         });
@@ -172,21 +174,21 @@ describe("Constructing a SmartBuffer", () => {
     });
 
     it("should throw an exception when give a invalid encoding", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const invalidEncoding: any = "invalid";
         const reader = SmartBuffer.fromOptions({
           encoding: invalidEncoding,
         });
       }, Error);
 
-      assert.throws(() => {
+      assertThrows(() => {
         const invalidEncoding: any = "invalid";
         const reader = SmartBuffer.fromSize(1024, invalidEncoding);
       }, Error);
     });
 
     it("should throw and exception when given an object that is not a SmartBufferOptions", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         // @ts-ignore: It existed in the original tests. SO..
         const reader = SmartBuffer.fromOptions(null);
       }, Error);
@@ -199,13 +201,13 @@ describe("Constructing a SmartBuffer", () => {
     const sbuff1 = SmartBuffer.fromBuffer(originalBuffer);
 
     it("Should create a SmartBuffer with a provided internal Buffer as the initial value", () => {
-      assert.deepEqual(sbuff1.internalBuffer, originalBuffer);
+      assertEquals(sbuff1.internalBuffer, originalBuffer);
     });
 
     const sbuff2 = SmartBuffer.fromSize(1024);
 
     it("Should create a SmartBuffer with a set provided initial Buffer size", () => {
-      assert.strictEqual(sbuff2.internalBuffer.length, 1024);
+      assertStrictEquals(sbuff2.internalBuffer.length, 1024);
     });
 
     const options: any = {
@@ -216,8 +218,8 @@ describe("Constructing a SmartBuffer", () => {
     const sbuff3 = SmartBuffer.fromOptions(options);
 
     it("Should create a SmartBuffer instance with a given SmartBufferOptions object", () => {
-      assert.strictEqual(sbuff3.encoding, options.encoding);
-      assert.strictEqual(sbuff3.internalBuffer.length, options.size);
+      assertStrictEquals(sbuff3.encoding, options.encoding);
+      assertStrictEquals(sbuff3.internalBuffer.length, options.size);
     });
   });
 });
@@ -270,32 +272,32 @@ describe("Reading/Writing To/From SmartBuffer", () => {
     iReader.readInt8(0);
 
     it("should equal the correct values that were written above", () => {
-      assert.strictEqual(reader.readUInt8(), 0xc8);
-      assert.strictEqual(reader.readUInt8(), 0xff);
-      assert.strictEqual(reader.readInt16BE(), 0x6699);
-      assert.strictEqual(reader.readInt16LE(), 0xc8);
-      assert.strictEqual(reader.readInt16LE(), 0x6699);
-      assert.strictEqual(reader.readUInt16BE(), 0xffdd);
-      assert.strictEqual(reader.readUInt16LE(), 0xffdd);
-      assert.strictEqual(reader.readInt32BE(), 0x77889900);
-      assert.strictEqual(reader.readInt32LE(), 0x77889900);
-      assert.strictEqual(reader.readUInt32BE(), 0xffddccbb);
-      assert.strictEqual(reader.readUInt32LE(), 0xffddccbb);
-      assert.closeTo(reader.readFloatBE(), 1.234, 0.001);
-      assert.closeTo(reader.readFloatLE(), 1.234, 0.001);
-      assert.closeTo(reader.readDoubleBE(), 1.23456789, 0.001);
-      assert.closeTo(reader.readDoubleLE(), 1.23456789, 0.001);
-      assert.equal(reader.readUInt8(0), 0xc8);
+      assertStrictEquals(reader.readUInt8(), 0xc8);
+      assertStrictEquals(reader.readUInt8(), 0xff);
+      assertStrictEquals(reader.readInt16BE(), 0x6699);
+      assertStrictEquals(reader.readInt16LE(), 0xc8);
+      assertStrictEquals(reader.readInt16LE(), 0x6699);
+      assertStrictEquals(reader.readUInt16BE(), 0xffdd);
+      assertStrictEquals(reader.readUInt16LE(), 0xffdd);
+      assertStrictEquals(reader.readInt32BE(), 0x77889900);
+      assertStrictEquals(reader.readInt32LE(), 0x77889900);
+      assertStrictEquals(reader.readUInt32BE(), 0xffddccbb);
+      assertStrictEquals(reader.readUInt32LE(), 0xffddccbb);
+      assertAlmostEquals(reader.readFloatBE(), 1.234, 0.001);
+      assertAlmostEquals(reader.readFloatLE(), 1.234, 0.001);
+      assertAlmostEquals(reader.readDoubleBE(), 1.23456789, 0.001);
+      assertAlmostEquals(reader.readDoubleLE(), 1.23456789, 0.001);
+      assertEquals(reader.readUInt8(0), 0xc8);
     });
 
     it("should throw an exception if attempting to read numeric values from a buffer with not enough data left", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         reader.readUInt32BE();
       });
     });
 
     it("should throw an exception if attempting to write numeric values to a negative offset.", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         reader.writeUInt16BE(20, -5);
       });
     });
@@ -319,19 +321,19 @@ describe("Reading/Writing To/From SmartBuffer", () => {
         wBuffer.writeBigUInt64LE(BigInt(Number.MAX_SAFE_INTEGER) * BigInt(4));
         wBuffer.writeBigUInt64BE(BigInt(Number.MAX_SAFE_INTEGER) * BigInt(5));
 
-        assert.equal(
+        assertEquals(
           wBuffer.readBigInt64LE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(2),
         );
-        assert.equal(
+        assertEquals(
           wBuffer.readBigInt64BE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(3),
         );
-        assert.equal(
+        assertEquals(
           wBuffer.readBigUInt64LE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(4),
         );
-        assert.equal(
+        assertEquals(
           wBuffer.readBigUInt64BE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(5),
         );
@@ -356,19 +358,19 @@ describe("Reading/Writing To/From SmartBuffer", () => {
           0,
         );
 
-        assert.equal(
+        assertEquals(
           iBuffer.readBigInt64BE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(9),
         );
-        assert.equal(
+        assertEquals(
           iBuffer.readBigInt64LE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(8),
         );
-        assert.equal(
+        assertEquals(
           iBuffer.readBigUInt64BE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(7),
         );
-        assert.equal(
+        assertEquals(
           iBuffer.readBigUInt64LE(),
           BigInt(Number.MAX_SAFE_INTEGER) * BigInt(6),
         );
@@ -386,27 +388,27 @@ describe("Reading/Writing To/From SmartBuffer", () => {
     reader.writeString("hello");
 
     it("should equal the correct strings that were written prior", () => {
-      assert.strictEqual(reader.readStringNT(), "first");
-      assert.strictEqual(reader.readStringNT(), "hello");
-      assert.strictEqual(reader.readString(5), "world");
-      assert.strictEqual(reader.readStringNT(), "✎✏✎✏✎✏");
-      assert.strictEqual(reader.readString(5, "ascii"), "hello");
+      assertStrictEquals(reader.readStringNT(), "first");
+      assertStrictEquals(reader.readStringNT(), "hello");
+      assertStrictEquals(reader.readString(5), "world");
+      assertStrictEquals(reader.readStringNT(), "✎✏✎✏✎✏");
+      assertStrictEquals(reader.readString(5, "ascii"), "hello");
     });
 
     it("should throw an exception if passing in an invalid string length to read (infinite)", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         reader.readString(NaN);
       });
     });
 
     it("should throw an exception if passing in an invalid string length to read (negative)", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         reader.readString(-5);
       });
     });
 
     it("should throw an exception if passing in an invalid string offset to insert (non number)", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const invalidNumber: any = "sdfdf";
         reader.insertString("hello", invalidNumber);
       });
@@ -422,13 +424,13 @@ describe("Reading/Writing To/From SmartBuffer", () => {
     reader.insertStringNT("first", 0, "ascii");
 
     it("should equal the correct strings that were written above", () => {
-      assert.strictEqual(reader.readStringNT(), "first");
-      assert.strictEqual(reader.readStringNT(), "some ascii text");
-      assert.strictEqual(reader.readStringNT("utf8"), "ѕσмє υтƒ8 тєχт");
+      assertStrictEquals(reader.readStringNT(), "first");
+      assertStrictEquals(reader.readStringNT(), "some ascii text");
+      assertStrictEquals(reader.readStringNT("utf8"), "ѕσмє υтƒ8 тєχт");
     });
 
     it("should throw an error when an invalid encoding is provided", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         // tslint:disable-next-line
         const invalidBufferType: any = "invalid";
         reader.writeString("hello", invalidBufferType);
@@ -436,7 +438,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
     });
 
     it("should throw an error when an invalid encoding is provided along with a valid offset", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const invalidBufferType: any = "invalid";
         reader.writeString("hellothere", 2, invalidBufferType);
       });
@@ -448,23 +450,23 @@ describe("Reading/Writing To/From SmartBuffer", () => {
     reader.writeString("hello\0test\0bleh");
 
     it("should equal hello", () => {
-      assert.strictEqual(reader.readStringNT(), "hello");
+      assertStrictEquals(reader.readStringNT(), "hello");
     });
 
     it("should equal: test", () => {
-      assert.strictEqual(reader.readString(4), "test");
+      assertStrictEquals(reader.readString(4), "test");
     });
 
     it("should have a length of zero", () => {
-      assert.strictEqual(reader.readStringNT().length, 0);
+      assertStrictEquals(reader.readStringNT().length, 0);
     });
 
     it("should return an empty string", () => {
-      assert.strictEqual(reader.readString(0), "");
+      assertStrictEquals(reader.readString(0), "");
     });
 
     it("should equal: bleh", () => {
-      assert.strictEqual(reader.readStringNT(), "bleh");
+      assertStrictEquals(reader.readStringNT(), "bleh");
     });
   });
 
@@ -475,7 +477,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
 
     const reader = SmartBuffer.fromBuffer(writer.toBuffer());
 
-    assert.strictEqual(reader.readString(), str);
+    assertStrictEquals(reader.readString(), str);
   });
 
   describe("Write string as specific position", () => {
@@ -487,7 +489,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
 
     reader.readOffset = 10;
     it("Should read the correct string from the original position it was written to.", () => {
-      assert.strictEqual(reader.readString(), str);
+      assertStrictEquals(reader.readString(), str);
     });
   });
 
@@ -500,7 +502,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
 
       it("should write the buffer to the front of the smart buffer instance", () => {
         const readBuff = buff.readBuffer(frontBuff.length);
-        assert.deepEqual(readBuff, frontBuff);
+        assertEquals(readBuff, frontBuff);
       });
     });
 
@@ -512,7 +514,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
 
       it("should write the buffer to the front of the smart buffer instance", () => {
         const readBuff = buff.readBufferNT();
-        assert.deepEqual(readBuff, frontBuff);
+        assertEquals(readBuff, frontBuff);
       });
     });
 
@@ -522,7 +524,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
       reader.writeBuffer(buff);
 
       it("should equal the buffer that was written above.", () => {
-        assert.deepEqual(reader.readBuffer(7), buff);
+        assertEquals(reader.readBuffer(7), buff);
       });
     });
 
@@ -532,7 +534,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
       reader.writeBuffer(buff);
 
       it("should equal the buffer that was written above.", () => {
-        assert.deepEqual(reader.readBuffer(), buff);
+        assertEquals(reader.readBuffer(), buff);
       });
     });
 
@@ -546,11 +548,11 @@ describe("Reading/Writing To/From SmartBuffer", () => {
       const read2 = buff.readBufferNT();
 
       it("Should return a length of 4 for the four bytes before the first null in the buffer.", () => {
-        assert.equal(read1.length, 4);
+        assertEquals(read1.length, 4);
       });
 
       it("Should return a length of 3 for the three bytes after the first null in the buffer after reading to end.", () => {
-        assert.equal(read2.length, 3);
+        assertEquals(read2.length, 3);
       });
     });
 
@@ -561,7 +563,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
       const read1 = buff.readBufferNT();
 
       it("Should read the correct null terminated buffer data.", () => {
-        assert.equal(read1.length, 4);
+        assertEquals(read1.length, 4);
       });
     });
 
@@ -570,7 +572,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
       buff.writeBuffer(Buffer.from([1, 2, 3, 4, 5, 6]));
 
       it("Should throw an exception if attempting to read a Buffer from an invalid offset", () => {
-        assert.throws(() => {
+        assertThrows(() => {
           const invalidOffset: any = "sfsdf";
           buff.readBuffer(invalidOffset);
         });
@@ -590,7 +592,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
       it("should equal the size of the remaining data in the buffer", () => {
         reader.readUInt16LE();
         const size = reader.readUInt16LE();
-        assert.strictEqual(reader.remaining(), size);
+        assertStrictEquals(reader.remaining(), size);
       });
     });
 
@@ -599,7 +601,7 @@ describe("Reading/Writing To/From SmartBuffer", () => {
         const writer = new SmartBuffer();
         const largeBuff = Buffer.alloc(10000);
         writer.writeBuffer(largeBuff);
-        assert.strictEqual(writer.length, largeBuff.length);
+        assertStrictEquals(writer.length, largeBuff.length);
       });
     });
   });
@@ -614,17 +616,17 @@ describe("Skipping around data", () => {
   it("Should equal the UInt16 that was written above", () => {
     const reader = SmartBuffer.fromBuffer(writer.toBuffer());
     reader.readOffset += 6;
-    assert.strictEqual(reader.readUInt16LE(), 6699);
+    assertStrictEquals(reader.readUInt16LE(), 6699);
     reader.readOffset = 0;
-    assert.strictEqual(reader.readStringNT(), "hello");
+    assertStrictEquals(reader.readStringNT(), "hello");
     reader.readOffset -= 6;
-    assert.strictEqual(reader.readStringNT(), "hello");
+    assertStrictEquals(reader.readStringNT(), "hello");
   });
 
   it("Should throw an error when attempting to skip more bytes than actually exist.", () => {
     const reader = SmartBuffer.fromBuffer(writer.toBuffer());
 
-    assert.throws(() => {
+    assertThrows(() => {
       reader.readOffset = 10000;
     });
   });
@@ -636,22 +638,22 @@ describe("Setting write and read offsets", () => {
 
   it("should set the write offset to 10", () => {
     writer.writeOffset = 10;
-    assert.strictEqual(writer.writeOffset, 10);
+    assertStrictEquals(writer.writeOffset, 10);
   });
 
   it("should set the read offset to 10", () => {
     writer.readOffset = 10;
-    assert.strictEqual(writer.readOffset, 10);
+    assertStrictEquals(writer.readOffset, 10);
   });
 
   it("should throw an error when given an offset that is out of bounds", () => {
-    assert.throws(() => {
+    assertThrows(() => {
       writer.readOffset = -1;
     });
   });
 
   it("should throw an error when given an offset that is out of bounds", () => {
-    assert.throws(() => {
+    assertThrows(() => {
       writer.writeOffset = 1000;
     });
   });
@@ -660,12 +662,12 @@ describe("Setting write and read offsets", () => {
 describe("Setting encoding", () => {
   const writer = SmartBuffer.fromSize(100);
   it("should have utf8 encoding by default", () => {
-    assert.strictEqual(writer.encoding, "utf8");
+    assertStrictEquals(writer.encoding, "utf8");
   });
 
   it("should have ascii encoding after being set", () => {
     writer.encoding = "ascii";
-    assert.strictEqual(writer.encoding, "ascii");
+    assertStrictEquals(writer.encoding, "ascii");
   });
 });
 
@@ -677,7 +679,7 @@ describe("Automatic internal buffer resizing", () => {
     writer = SmartBuffer.fromSize(1);
     writer.writeString(str);
 
-    assert.strictEqual(writer.internalBuffer.length, str.length);
+    assertStrictEquals(writer.internalBuffer.length, str.length);
   });
 
   it("Should not throw an error when adding data that is larger than current buffer size (internal resize algo succeeds)", () => {
@@ -687,7 +689,7 @@ describe("Automatic internal buffer resizing", () => {
     writer.writeBuffer(buff);
 
     // Test internal array growth algo.
-    assert.strictEqual(writer.internalBuffer.length, 100 * 3 / 2 + 1);
+    assertStrictEquals(writer.internalBuffer.length, 100 * 3 / 2 + 1);
   });
 });
 
@@ -696,12 +698,12 @@ describe("Clearing the buffer", () => {
   writer.writeString("somedata");
 
   it("Should contain some data.", () => {
-    assert.notStrictEqual(writer.length, 0);
+    assertNotStrictEquals(writer.length, 0);
   });
 
   it("Should contain zero data after being cleared.", () => {
     writer.clear();
-    assert.strictEqual(writer.length, 0);
+    assertStrictEquals(writer.length, 0);
   });
 });
 
@@ -713,15 +715,15 @@ describe("Displaying the buffer as a string", () => {
   const str64 = buff.toString("binary");
 
   it("Should return a valid string representing the internal buffer", () => {
-    assert.strictEqual(str, sbuff.toString());
+    assertStrictEquals(str, sbuff.toString());
   });
 
   it("Should return a valid base64 string representing the internal buffer", () => {
-    assert.strictEqual(str64, sbuff.toString("binary"));
+    assertStrictEquals(str64, sbuff.toString("binary"));
   });
 
   it("Should throw an error if an invalid encoding is provided", () => {
-    assert.throws(() => {
+    assertThrows(() => {
       const invalidencoding: any = "invalid";
       const strError = sbuff.toString(invalidencoding);
     });
@@ -735,7 +737,7 @@ describe("Destroying the buffer", () => {
   writer.destroy();
 
   it("Should have a length of zero when buffer is destroyed", () => {
-    assert.strictEqual(0, writer.length);
+    assertStrictEquals(0, writer.length);
   });
 });
 
@@ -745,13 +747,13 @@ describe("ensureWritable()", () => {
   it("should increase the internal buffer size to accomodate given size.", () => {
     sbuff._ensureWriteable(100);
 
-    assert.strictEqual(sbuff.internalBuffer.length >= 100, true);
+    assertStrictEquals(sbuff.internalBuffer.length >= 100, true);
   });
 });
 
 describe("isSmartBufferOptions()", () => {
   it("should return true when encoding is defined", () => {
-    assert.strictEqual(
+    assertStrictEquals(
       SmartBuffer.isSmartBufferOptions({
         encoding: "utf8",
       }),
@@ -760,7 +762,7 @@ describe("isSmartBufferOptions()", () => {
   });
 
   it("should return true when size is defined", () => {
-    assert.strictEqual(
+    assertStrictEquals(
       SmartBuffer.isSmartBufferOptions({
         size: 1024,
       }),
@@ -769,7 +771,7 @@ describe("isSmartBufferOptions()", () => {
   });
 
   it("should return true when buff is defined", () => {
-    assert.strictEqual(
+    assertStrictEquals(
       SmartBuffer.isSmartBufferOptions({
         buff: Buffer.alloc(4096),
       }),
@@ -781,21 +783,21 @@ describe("isSmartBufferOptions()", () => {
 describe("utils", () => {
   describe("isFiniteInteger", () => {
     it("should return true for a number that is finite and an integer", () => {
-      assert.equal(isFiniteInteger(10), true);
+      assertEquals(isFiniteInteger(10), true);
     });
 
     it("should return false for a number that is infinite", () => {
-      assert.equal(isFiniteInteger(NaN), false);
+      assertEquals(isFiniteInteger(NaN), false);
     });
 
     it("should return false for a number that is not an integer", () => {
-      assert.equal(isFiniteInteger(10.1), false);
+      assertEquals(isFiniteInteger(10.1), false);
     });
   });
 
   describe("checkEncoding", () => {
     it("should throw an exception if a given string is not a valid BufferEncoding", () => {
-      assert.throws(() => {
+      assertThrows(() => {
         const invalidEncoding: any = "sdfdf";
         checkEncoding(invalidEncoding);
       });

@@ -1,4 +1,4 @@
-import { Buffer } from "https://deno.land/std@0.147.0/node/buffer.ts";
+import { Buffer } from "node:buffer";
 import {
   bigIntAndBufferInt64Check,
   BufferEncoding,
